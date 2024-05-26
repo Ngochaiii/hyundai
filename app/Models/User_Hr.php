@@ -120,4 +120,8 @@ class User_Hr extends Model
         'noi_o_hien_tai',
         'so_qd_cham_dut_hd',
     ];
+    public function familyMembers()
+    {
+        return $this->hasMany(FamilyMember::class, 'user_id');
+    }
 }

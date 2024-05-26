@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Models\FamilyMember;
 use App\Models\User_Hr;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -25,49 +26,39 @@ class UsersImport implements ToModel, WithHeadingRow
         $maSo = $this->getValue($row, 'ma_so');
         $maChiTiet = $this->getValue($row, 'ma_chi_tiet');
 
-        // Nếu là nhân viên mới (không có mã chi tiết), lưu lại thông tin nhân viên hiện tại và gia đình của họ
         if (!empty($maSo) && empty($maChiTiet)) {
-            // Lưu nhân viên trước đó nếu tồn tại
             if ($this->currentEmployee !== null) {
                 $this->saveCurrentEmployee();
             }
 
-            // Khởi tạo nhân viên mới
             $this->currentEmployee = $this->extractEmployeeData($row);
             $this->familyData = [];
         }
 
-        // Nếu có mã chi tiết, đây là thành viên gia đình của nhân viên hiện tại
         if (!empty($maChiTiet)) {
             $this->familyData[] = $this->extractFamilyData($row);
         }
 
-        // Thêm debug log
-        Log::info('Family Data', $this->familyData);
-
-        return null; // Trả về null để không lưu trữ trực tiếp trong quá trình import
+        return null;
     }
 
     public function __destruct()
     {
-        // Lưu lại nhân viên cuối cùng khi quá trình import kết thúc
         $this->saveCurrentEmployee();
     }
 
     private function saveCurrentEmployee()
     {
         if ($this->currentEmployee !== null) {
-            $this->currentEmployee['gia_dinh'] = json_encode($this->familyData);
+            $employee = User_Hr::create($this->currentEmployee);
 
-            // Thêm log để kiểm tra dữ liệu trước khi lưu
-            Log::info('Saving Employee', $this->currentEmployee);
-
-            // Thêm kiểm tra xem `gia_dinh` có bị null trước khi lưu không
-            Log::info('Family Data JSON', [$this->currentEmployee['gia_dinh']]);
-
-            User_Hr::create($this->currentEmployee);
+            foreach ($this->familyData as $family) {
+                $family['user_id'] = $employee->id;
+                FamilyMember::create($family);
+            }
         }
     }
+
 
     private function extractEmployeeData(array $row)
     {
@@ -176,7 +167,7 @@ class UsersImport implements ToModel, WithHeadingRow
             'nam_sinh' => $this->transformDate($this->getValue($row, 'nam_sinh')),
             'nghe_nghiep' => $this->getValue($row, 'nghe_nghiep'),
             'noi_o' => $this->getValue($row, 'noi_o'),
-            'quan_he' => $this->getValue($row, 'quan_he') // Thêm quan hệ thành viên gia đình (ví dụ: vợ, con)
+            'quan_he' => $this->getValue($row, 'quan_he')
         ];
     }
 
