@@ -122,6 +122,7 @@ return new class extends Migration
         $table->string('noi_o_2')->nullable();
         $table->string('noi_o_hien_tai')->nullable();
         $table->string('so_qd_cham_dut_hd')->nullable();
+        $table->json('gia_dinh')->nullable(); // Thêm trường gia_dinh dạng JSON
         $table->timestamps();
     });
 }
