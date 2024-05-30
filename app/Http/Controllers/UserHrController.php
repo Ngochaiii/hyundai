@@ -1,7 +1,7 @@
 <?php
-
 namespace App\Http\Controllers;
 
+use App\Exports\UsersExport;
 use App\Imports\UsersImport;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
@@ -32,6 +32,22 @@ class UserHrController extends Controller
     {
         $users = $this->userRepo->all();
         return view('web.data_hr.index', compact('users'));
+    }
+
+    public function export()
+    {
+        return Excel::download(new UsersExport, 'users.xlsx');
+    }
+
+    public function exportSelected(Request $request)
+    {
+        $selectedUsers = $request->input('selected_users', []);
+
+        if (empty($selectedUsers)) {
+            return redirect()->back()->with('error', 'No users selected for export.');
+        }
+
+        return Excel::download(new UsersExport($selectedUsers), 'selected_users.xlsx');
     }
 }
 

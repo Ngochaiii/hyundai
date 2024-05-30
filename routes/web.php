@@ -23,3 +23,7 @@ Route::get('users', [UserHrController::class, 'index'])->name('users.index');
 Route::post('users/import', [UserHrController::class, 'import'])->name('users.import');
 
 Route::get('users/export', [UserHrController::class, 'export'])->name('users.export');
+
+
+Route::post('users/export/selected', [UserHrController::class, 'exportSelected'])->name('users.export.selected');
+
